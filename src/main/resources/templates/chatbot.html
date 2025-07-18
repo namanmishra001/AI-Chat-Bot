@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>APP Bot Interface</title>
+    <style>
+        body {
+            display: flex;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Left Navigation */
+        .sidebar {
+            width: 180px;
+            height: 100vh;
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-box {
+            margin-bottom: 10px;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar ul li {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .sidebar .create-case-button {
+            background-color: #28a745; /* Green */
+            color: white;
+            border: none;
+            padding: 8px 0px;
+            margin-top: 20px;
+            margin-bottom: 15%;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .sidebar .create-case-button:hover {
+            background-color: #218838;
+        }
+
+        /* Main Content */
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .user-message {
+            background-color: #d1ecf1;
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            width: fit-content;
+            max-width: 80%;
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 35px;
+            border-top: 1px solid #ddd;
+            background: #f8f9fa;
+            align-items: center;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .chat-input button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            margin-left: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .chat-input button:hover {
+            background-color: #0056b3;
+        }
+
+        #clearButton {
+            background-color: #dc3545;
+        }
+
+        #clearButton:hover {
+            background-color: #b02a37;
+        }
+
+        /* Modal (hidden by default) */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            width: 400px;
+            text-align: center;
+        }
+
+        .bot-message {
+            background-color: #f8d7da;
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            width: fit-content;
+            max-width: 80%;
+        }
+
+        .modal-content input {
+            width: 92%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .modal-content button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .modal-content button:hover {
+            background-color: #0056b3;
+        }
+
+        .modal-content .clear-button {
+            background-color: #dc3545;
+        }
+
+        .modal-content .clear-button:hover {
+            background-color: #b02a37;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Left Navigation -->
+<div class="sidebar">
+    <label> Bot History </label>
+    <input type="text" class="search-box" placeholder="Search history...">
+    <ul id="historyList"></ul>
+    <button class="create-case-button" id="createCaseButton" onclick="openModal()">Need Help? Create a Case</button>
+
+</div>
+
+<!-- Chat Interface -->
+<div class="content">
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input">
+        <input type="text" id="userInput" placeholder="Type your message...">
+        <button id="sendButton" onclick="sendMessage()">Send</button>
+        <button id="clearButton" onclick="clearChat()">Clear</button>
+    </div>
+</div>
+
+<!-- Modal for Creating a Case -->
+<div class="modal" id="createCaseModal">
+    <div class="modal-content">
+        <h2>Create a Case</h2>
+        <input type="text" id="caseDescription" placeholder="Enter case description...">
+        <div>
+            <button onclick="submitCase()">Submit</button>
+            <button class="clear-button" onclick="clearCaseForm()">Clear</button>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+        console.log("JavaScript Loaded!");
+
+        document.getElementById("sendButton").addEventListener("click", sendMessage);
+        document.getElementById("clearButton").addEventListener("click", clearChat);
+        document.getElementById("userInput").addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+    });
+
+    let chatHistory = [];
+
+    function sendMessage() {
+        let inputField = document.getElementById("userInput");
+        let message = inputField.value.trim();
+        if (!message) return;
+
+        chatHistory.push(message);
+        updateHistory();
+
+        var chatMessages = document.getElementById("chatMessages");
+        chatMessages.innerHTML += `
+       <div class='message user-message' style="margin-top: 2%;">
+        <strong>You: </strong> ${message}
+        </div>`;
+
+        // Show loading animation below the user message
+        let loadingMessage = document.createElement('div');
+        loadingMessage.className = 'message bot-message';
+        loadingMessage.innerHTML = "<strong>Albert Response: </strong>Analysing..<span class='ellipsis'><span>.</span></span>";
+        chatMessages.appendChild(loadingMessage);
+
+        // Scroll to the bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+   let startTime = performance.now();
+
+fetch(`/api/prompt?question=${encodeURIComponent(message)}`)
+    .then(response => response.text())
+    .then(data => {
+        let endTime = performance.now();
+        let timeTaken = ((endTime - startTime) / 1000).toFixed(2); // in seconds
+
+        loadingMessage.innerHTML = `
+            <strong>Albert Response:</strong> ${data}<br>
+            <em>(Took ${timeTaken} seconds)</em>
+        `;
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    })
+
+        inputField.value = "";
+    }
+
+    function updateHistory() {
+        let historyList = document.getElementById("historyList");
+        historyList.innerHTML = "";
+        chatHistory.forEach(query => {
+            let li = document.createElement("li");
+            li.textContent = query;
+            historyList.appendChild(li);
+        });
+    }
+
+    function clearChat() {
+        document.getElementById("chatMessages").innerHTML = "";
+    }
+
+    // Open modal function
+    function openModal() {
+        document.getElementById("createCaseModal").style.display = "flex";
+    }
+
+    // Close modal
+    function closeModal() {
+        document.getElementById("createCaseModal").style.display = "none";
+    }
+
+    function submitCase() {
+    var caseDescription = document.getElementById("caseDescription").value.trim();
+
+    if (!caseDescription) {
+        alert("Please provide a case description.");
+        return;
+    }
+
+    // Send the case description to the backend to classify it
+    fetch('/api/classify-case', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ description: caseDescription }),
+    })
+    .then(response => response.text())
+    .then(data => {
+    console.log(data);
+        alert("Case classified as: " + data);  // Ensure the response is in expected format
+        clearCaseForm(); // Clear form after submission
+        closeModal(); // Close the modal after submission
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error classifying the case');
+    });
+}
+
+    // Clear the form
+    function clearCaseForm() {
+        document.getElementById("caseDescription").value = "";
+    }
+
+
+</script>
+
+</body>
+</html>
