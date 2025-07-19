@@ -179,6 +179,42 @@
         .modal-content .clear-button:hover {
             background-color: #b02a37;
         }
+        .logo-wrapper {
+    width: 100%;
+    text-align: center;
+    background: #ffffff;
+    padding: 10px 0;
+    border-bottom: 1px solid #ddd;
+
+}
+
+.logo-wrapper img {
+    max-height: 40px;
+}
+        .analyzing-text {
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #004785;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.dots::after {
+    content: '';
+    display: inline-block;
+    width: 1em;
+    text-align: left;
+    animation: dots 1.5s steps(4, end) infinite;
+}
+
+@keyframes dots {
+    0%   { content: ''; }
+    25%  { content: '.'; }
+    50%  { content: '..'; }
+    75%  { content: '...'; }
+    100% { content: ''; }
+}
     </style>
 </head>
 <body>
@@ -191,147 +227,153 @@
     <button class="create-case-button" id="createCaseButton" onclick="openModal()">Need Help? Create a Case</button>
 
 </div>
-
-<!-- Chat Interface -->
-<div class="content">
-    <div class="chat-messages" id="chatMessages"></div>
-    <div class="chat-input">
-        <input type="text" id="userInput" placeholder="Type your message...">
-        <button id="sendButton" onclick="sendMessage()">Send</button>
-        <button id="clearButton" onclick="clearChat()">Clear</button>
+<!-- Right Section -->
+<div style="flex: 1; display: flex; flex-direction: column;">
+    <!-- Logo at the top -->
+    <div class="logo-wrapper">
+        <img src="/images/Albertsons-logo.png" alt="Albertsons Logo">
     </div>
-</div>
 
-<!-- Modal for Creating a Case -->
-<div class="modal" id="createCaseModal">
-    <div class="modal-content">
-        <h2>Create a Case</h2>
-        <input type="text" id="caseDescription" placeholder="Enter case description...">
-        <div>
-            <button onclick="submitCase()">Submit</button>
-            <button class="clear-button" onclick="clearCaseForm()">Clear</button>
+    <!-- Chat Interface -->
+    <div class="content">
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input">
+            <input type="text" id="userInput" placeholder="Type your message...">
+            <button id="sendButton" onclick="sendMessage()">Send</button>
+            <button id="clearButton" onclick="clearChat()">Clear</button>
         </div>
     </div>
-</div>
 
-<script>
+    <!-- Modal for Creating a Case -->
+    <div class="modal" id="createCaseModal">
+        <div class="modal-content">
+            <h2>Create a Case</h2>
+            <input type="text" id="caseDescription" placeholder="Enter case description...">
+            <div>
+                <button onclick="submitCase()">Submit</button>
+                <button class="clear-button" onclick="clearCaseForm()">Clear</button>
+            </div>
+        </div>
+    </div>
 
-    document.addEventListener("DOMContentLoaded", function () {
-        console.log("JavaScript Loaded!");
+    <script>
 
-        document.getElementById("sendButton").addEventListener("click", sendMessage);
-        document.getElementById("clearButton").addEventListener("click", clearChat);
-        document.getElementById("userInput").addEventListener("keypress", function (event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                sendMessage();
-            }
+        document.addEventListener("DOMContentLoaded", function () {
+            console.log("JavaScript Loaded!");
+
+            document.getElementById("sendButton").addEventListener("click", sendMessage);
+            document.getElementById("clearButton").addEventListener("click", clearChat);
+            document.getElementById("userInput").addEventListener("keypress", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    sendMessage();
+                }
+            });
         });
-    });
 
-    let chatHistory = [];
+        let chatHistory = [];
 
-    function sendMessage() {
-        let inputField = document.getElementById("userInput");
-        let message = inputField.value.trim();
-        if (!message) return;
+        function sendMessage() {
+            let inputField = document.getElementById("userInput");
+            let message = inputField.value.trim();
+            if (!message) return;
 
-        chatHistory.push(message);
-        updateHistory();
+            chatHistory.push(message);
+            updateHistory();
 
-        var chatMessages = document.getElementById("chatMessages");
-        chatMessages.innerHTML += `
-       <div class='message user-message' style="margin-top: 2%;">
-        <strong>You: </strong> ${message}
-        </div>`;
+            var chatMessages = document.getElementById("chatMessages");
+            chatMessages.innerHTML += `
+           <div class='message user-message' style="margin-top: 2%;">
+            <strong>You: </strong> ${message}
+            </div>`;
 
-        // Show loading animation below the user message
-        let loadingMessage = document.createElement('div');
-        loadingMessage.className = 'message bot-message';
-        loadingMessage.innerHTML = "<strong>Albert Response: </strong>Analysing..<span class='ellipsis'><span>.</span></span>";
-        chatMessages.appendChild(loadingMessage);
+            // Show loading animation below the user message
+            let loadingMessage = document.createElement('div');
+            loadingMessage.className = 'message bot-message';
+            loadingMessage.innerHTML = "<strong>Albert Response: </strong>Analysing<span class='dots'></span>";
+            chatMessages.appendChild(loadingMessage);
 
-        // Scroll to the bottom
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+            // Scroll to the bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
 
-   let startTime = performance.now();
+       let startTime = performance.now();
 
-fetch(`/api/prompt?question=${encodeURIComponent(message)}`)
-    .then(response => response.text())
-    .then(data => {
-        let endTime = performance.now();
-        let timeTaken = ((endTime - startTime) / 1000).toFixed(2); // in seconds
+    fetch(`/api/prompt?question=${encodeURIComponent(message)}`)
+        .then(response => response.text())
+        .then(data => {
+            let endTime = performance.now();
+            let timeTaken = ((endTime - startTime) / 1000).toFixed(2); // in seconds
 
-        loadingMessage.innerHTML = `
-            <strong>Albert Response:</strong> ${data}<br>
-            <em>(Took ${timeTaken} seconds)</em>
-        `;
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    })
+            loadingMessage.innerHTML = `
+                <strong>Albert Response:</strong> ${data}<br>
+                <em>(Took ${timeTaken} seconds)</em>
+            `;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        })
 
-        inputField.value = "";
-    }
+            inputField.value = "";
+        }
 
-    function updateHistory() {
-        let historyList = document.getElementById("historyList");
-        historyList.innerHTML = "";
-        chatHistory.forEach(query => {
-            let li = document.createElement("li");
-            li.textContent = query;
-            historyList.appendChild(li);
+        function updateHistory() {
+            let historyList = document.getElementById("historyList");
+            historyList.innerHTML = "";
+            chatHistory.forEach(query => {
+                let li = document.createElement("li");
+                li.textContent = query;
+                historyList.appendChild(li);
+            });
+        }
+
+        function clearChat() {
+            document.getElementById("chatMessages").innerHTML = "";
+        }
+
+        // Open modal function
+        function openModal() {
+            document.getElementById("createCaseModal").style.display = "flex";
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById("createCaseModal").style.display = "none";
+        }
+
+        function submitCase() {
+        var caseDescription = document.getElementById("caseDescription").value.trim();
+
+        if (!caseDescription) {
+            alert("Please provide a case description.");
+            return;
+        }
+
+        // Send the case description to the backend to classify it
+        fetch('/api/classify-case', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ description: caseDescription }),
+        })
+        .then(response => response.text())
+        .then(data => {
+        console.log(data);
+            alert("Case classified as: " + data);  // Ensure the response is in expected format
+            clearCaseForm(); // Clear form after submission
+            closeModal(); // Close the modal after submission
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error classifying the case');
         });
     }
 
-    function clearChat() {
-        document.getElementById("chatMessages").innerHTML = "";
-    }
-
-    // Open modal function
-    function openModal() {
-        document.getElementById("createCaseModal").style.display = "flex";
-    }
-
-    // Close modal
-    function closeModal() {
-        document.getElementById("createCaseModal").style.display = "none";
-    }
-
-    function submitCase() {
-    var caseDescription = document.getElementById("caseDescription").value.trim();
-
-    if (!caseDescription) {
-        alert("Please provide a case description.");
-        return;
-    }
-
-    // Send the case description to the backend to classify it
-    fetch('/api/classify-case', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ description: caseDescription }),
-    })
-    .then(response => response.text())
-    .then(data => {
-    console.log(data);
-        alert("Case classified as: " + data);  // Ensure the response is in expected format
-        clearCaseForm(); // Clear form after submission
-        closeModal(); // Close the modal after submission
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error classifying the case');
-    });
-}
-
-    // Clear the form
-    function clearCaseForm() {
-        document.getElementById("caseDescription").value = "";
-    }
+        // Clear the form
+        function clearCaseForm() {
+            document.getElementById("caseDescription").value = "";
+        }
 
 
-</script>
+    </script>
 
 </body>
 </html>
