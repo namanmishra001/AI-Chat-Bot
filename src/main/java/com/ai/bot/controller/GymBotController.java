@@ -38,7 +38,7 @@ public class GymBotController {
                 .build();
     }
 
-    @PostConstruct
+    //@PostConstruct
     public void initializeIndex() {
         List<String> gymData = List.of(
                 "Monday: Chest & Triceps",
@@ -60,7 +60,7 @@ public class GymBotController {
         System.out.println("API is working fine. Received: " + question);
         long startTime = System.nanoTime();
         if (cache.containsKey(question)) {
-            System.out.println("Returning response from cach, for question: " + question);
+            System.out.println("Returning response from cache, for question: " + question);
             return cache.get(question);
         }
         List<Document> relevantDocs = vectorStore.similaritySearch(question);
@@ -82,7 +82,6 @@ public class GymBotController {
         long endTime = System.nanoTime();
         long durationInNano = endTime - startTime;
 
-        System.out.println("Time taken: " + durationInNano + " nanoseconds");
         System.out.println("Time taken: " + (durationInNano / 1_000_000_000.0) + " seconds");
 
         String sanitizedResponse = ResponseSanitizer.sanitize(rawResponse);

@@ -12,7 +12,7 @@ public class Prompts {
             """;
 
     public static final String LLM_PROMPT = """
-        You are a Gym Assistant AI. Answer the question strictly based on the documents section.
+        You are a AI Assistant. Answer the question strictly based on the documents section.
         Context:
         %s
         Question: %s

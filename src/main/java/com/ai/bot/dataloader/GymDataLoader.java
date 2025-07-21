@@ -18,20 +18,19 @@ public class GymDataLoader {
 
     private final VectorStore vectorStore;
 
-    @Value("classpath:docs/sample_pdf_with_gym_schedule.pdf")
+    @Value("classpath:docs/abshelpcenter.pdf")
     private Resource pdfResource;
-
     public GymDataLoader(VectorStore vectorStore) {
         this.vectorStore = vectorStore;
     }
 
     @PostConstruct
     public void init() {
-        log.info("loading GYM Data....");
+        log.info("loading partner Data into vector db....");
         PdfDocumentReaderConfig config = PdfDocumentReaderConfig.builder().withPagesPerDocument(1).build();
         PagePdfDocumentReader reader = new PagePdfDocumentReader(pdfResource, config);
         var textSplitter = new TokenTextSplitter();
         vectorStore.accept(textSplitter.apply(reader.get()));
-        log.info("GYM Data loaded succesfuly");
+        log.info("partner data loaded successfully");
     }
 }
